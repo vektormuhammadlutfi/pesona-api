@@ -1,0 +1,32 @@
+### tRPC Product API Requests
+
+# Health Check
+GET http://localhost:3000/trpc/healthCheck
+
+# List Products (Query) - Full Filtering
+GET http://localhost:3000/trpc/product.list?input={"page":1,"limit":10,"search":"","minPrice":0,"maxPrice":2000}
+Content-Type: application/json
+
+# List Products (Query) - Default Parameters
+GET http://localhost:3000/trpc/product.list
+Content-Type: application/json
+
+# Get Product by Slug (Query)
+GET http://localhost:3000/trpc/product.getBySlug?input={"slug":"apple-iphone-12-pro"}
+Content-Type: application/json
+
+# Product Aggregation (Query) - Default
+GET http://localhost:3000/trpc/product.aggregate
+Content-Type: application/json
+
+# Product Aggregation (Query) - Custom
+GET http://localhost:3000/trpc/product.aggregate?input={"groupBy":"price","metric":"avgPrice"}
+Content-Type: application/json
+
+### Category API Requests
+# List Categories (Query)
+GET http://localhost:3000/trpc/category.list
+
+# Get Category by ID (Query)
+GET http://localhost:3000/trpc/category.getById?input={"id":"category-uuid"}
+Content-Type: application/json
