@@ -1,4 +1,4 @@
-# Media Sakti Phone Store Marketplace API Documentation
+# PESONA (Portal Elektronik Seken Online Nasabah) Marketplace API Documentation
 
 ## Getting Started
 
