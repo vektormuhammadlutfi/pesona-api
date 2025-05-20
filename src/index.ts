@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { config } from "dotenv";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { cors } from "hono/cors";
 
 import { appRouter } from "@/trpc/router";
 import { createContext } from "@/trpc/context";
@@ -10,6 +11,9 @@ config();
 
 // Create Hono app
 const app = new Hono();
+
+// Use CORS middleware
+app.use("*", cors());
 
 // tRPC handler using fetch adapter
 app.use("/trpc/*", async (c) => {
