@@ -2,6 +2,7 @@ import { prisma } from "@/config/database";
 import { ProductAggregationSchema } from "@/utils/advanced-filter";
 import { z } from "zod";
 import { AppError } from "@/utils/error-handler";
+import { ProductSchema } from "@/utils/validation";
 
 /**
  * Product service with business logic and data operations
@@ -107,6 +108,94 @@ export class ProductService {
     }
 
     return product;
+  }
+
+  /**
+   * Create a new product
+   * @param data - Product creation data
+   */
+  async createProduct(data: unknown) {
+    const validatedData = ProductSchema.parse(data);
+    const { variants, ...productData } = validatedData;
+
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        OR: [{ slug: productData.slug }, { sku: productData.sku }],
+      },
+    });
+
+    if (existingProduct) {
+      throw new AppError(
+        "Product with this slug or SKU already exists",
+        "CONFLICT"
+      );
+    }
+
+    return prisma.product.create({
+      data: {
+        ...productData,
+        variants: variants
+          ? {
+              create: variants,
+            }
+          : undefined,
+      },
+      include: { category: true, variants: true },
+    });
+  }
+
+  /**
+   * Update an existing product
+   * @param id - Product ID
+   * @param data - Update data
+   */
+  async updateProduct(id: string, data: unknown) {
+    const validatedData = ProductSchema.partial().parse(data);
+    const { variants, ...productData } = validatedData;
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!existingProduct) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    return prisma.product.update({
+      where: { id },
+      data: {
+        ...productData,
+        variants: variants
+          ? {
+              deleteMany: {},
+              create: variants,
+            }
+          : undefined,
+      },
+      include: { category: true, variants: true },
+    });
+  }
+
+  /**
+   * Delete a product
+   * @param id - Product ID
+   */
+  async deleteProduct(id: string) {
+    const product = await prisma.product.findUnique({
+      where: { id },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    await prisma.variant.deleteMany({
+      where: { productId: id },
+    });
+
+    return prisma.product.delete({
+      where: { id },
+    });
   }
 }
 

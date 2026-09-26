@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { ZodError } from "zod";
+import type { Context } from "hono";
 
 /**
  * Custom application error class
@@ -12,6 +13,49 @@ export class AppError extends Error {
     super(message);
     this.name = "AppError";
   }
+}
+
+/**
+ * Async handler middleware wrapper for Hono route handlers
+ */
+export function asyncHandler<T extends Context = Context>(
+  fn: (c: T) => Promise<Response | void>
+) {
+  return async (c: T) => {
+    try {
+      return await fn(c);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return c.json(
+          {
+            success: false,
+            error: "Validation failed",
+            details: error.errors.map((e) => e.message),
+          },
+          400
+        );
+      }
+
+      if (error instanceof AppError) {
+        const statusMap: Record<string, 400 | 401 | 403 | 404 | 408 | 409 | 500> = {
+          BAD_REQUEST: 400,
+          UNAUTHORIZED: 401,
+          FORBIDDEN: 403,
+          NOT_FOUND: 404,
+          TIMEOUT: 408,
+          CONFLICT: 409,
+          INTERNAL_SERVER_ERROR: 500,
+        };
+        const status = statusMap[error.code] || 500;
+        return c.json({ success: false, error: error.message }, status);
+      }
+
+      logError(error);
+      const message =
+        error instanceof Error ? error.message : "Internal Server Error";
+      return c.json({ success: false, error: message }, 500);
+    }
+  };
 }
 
 /**

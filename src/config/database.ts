@@ -37,15 +37,15 @@ class DatabaseClient {
    * Configure logging for database events
    */
   private static setupLogging() {
-    const instance = DatabaseClient.instance;
+    const instance = DatabaseClient.instance as any;
 
-    instance.$on('query', (e) => {
+    instance.$on('query', (e: any) => {
       console.log('Query:', e.query);
       console.log('Params:', e.params);
       console.log('Duration:', e.duration + 'ms');
     });
 
-    instance.$on('error', (e) => {
+    instance.$on('error', (e: any) => {
       console.error('Database Error:', e);
     });
   }
